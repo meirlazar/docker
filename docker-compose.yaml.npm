@@ -1,0 +1,40 @@
+version: '3.8'
+services:
+  npm:
+    image: 'jc21/nginx-proxy-manager:latest'
+    restart: unless-stopped
+    container_name: 'npmapp'
+   
+mem_limit: 4096M
+    cpus: 4
+
+    ports:
+      - '80:80' # public http port # on your router, use port forwardinginbound from *:80/tcp to hostip:80/tcp
+      - '81:81' # admin web port 
+      - '443:443' # public https port # on your router, use port forwarding inbound from *:443/tcp to hostip:443/tcp
+
+    environment:
+      DB_SQLITE_FILE: "/data/database.sqlite"
+      TZ: "America/New_York"
+      PUID: "1000"
+      PGID: "1000"
+      DISABLE_IPV6: 'true' #if ipv6 is disabled on your host system
+
+    volumes:
+      - ./data:/data
+      - ./letsencrypt:/etc/letsencrypt
+
+    healthcheck:
+      test: ["CMD", "/bin/check-health"]
+      # test: curl --connect-timeout 5 --retry 3 --fail -s -o /dev/null http://localhost:81 || exit 1      # alternate health check that will work
+      interval: 3m
+      timeout: 10s
+      retries: 3
+      start_period: 1m
+
+networks: # shared by all apps that you want npm to route with so you can specify the service name in the hostname and do not need to expose any ports in the compose files.
+  default:
+    external: true
+    name: SHARED
+
+# https://nginxproxymanager.com/guide/#quick-setup - for more info, check this out
