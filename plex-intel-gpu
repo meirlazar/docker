@@ -1,0 +1,48 @@
+version: '3.2'
+services:
+  plex:
+    image: 'plexinc/pms-docker:plexpass' # or use latest'
+    init: true
+    container_name: plex-intel-gpu
+    network_mode: host
+    devices:
+      - /dev/dri:/dev/dri # if using intel GPU
+    mem_limit: 8096M
+    mem_reservation: 200M
+    cpus: 4.0
+    environment:
+         TZ: "America/New_York"
+         PLEX_CLAIM: "claim-xxxxxxxxxxxxxxxx"
+         ADVERTISE_IP: "http://192.168.1.x:32400/"
+         ALLOWED_NETWORKS: 192.168.0.0/16,172.16.0.0/16
+         PLEX_UID: 1000
+         PLEX_GID: 1000
+    restart: unless-stopped
+    hostname: 'plexserv'
+    volumes:
+      - type: bind
+        source: ./plex/database/
+        target: /config/
+      - type: bind
+        source: ./plex/transcode/temp/
+        target: /transcode/
+      - type: bind
+        source: /media/videos/
+        target: /data/videos/
+      - type: bind
+        source: /media/music/
+        target: /data/music/
+      - type: bind
+        source: /media/pictures/
+        target: /data/pics/
+    healthcheck:
+      test: ["CMD-SHELL", "df -h", "|", "grep", "/media/{pics,music,videos}", "||", "exit", "1"]
+      interval: 3m
+      timeout: 10s
+      retries: 3
+      start_period: 1m
+networks:
+  default:
+    external: true
+    name: SHARED
+
