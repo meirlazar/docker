@@ -1,0 +1,35 @@
+#  use a separate .env file for referencing variables
+version: "2.1"
+services:
+  code-server:
+    image: lscr.io/linuxserver/code-server
+    init: true # avoid zombie procs 
+    container_name: code-server
+    environment:
+      - PUID=${PUID} 
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - PASSWORD=${PASSWORD} #optional
+      - HASHED_PASSWORD= #optional
+      - SUDO_PASSWORD=${SUDOPASS} #optional
+      - SUDO_PASSWORD_HASH= #optional
+      - PROXY_DOMAIN= #optional
+    volumes:
+      - ./config:/config
+      - ${vcProject}:/data # vol mount for data
+    ports:
+      - 8443:8443 # 
+    restart: unless-stopped
+    mem_limit: 1024m
+    mem_reservation: 10M
+    cpus: 1.0
+    healthcheck:
+      test: curl --connect-timeout 5 --retry 3 --fail -s -o /dev/null http://localhost:8443 || exit 1  # healthcheck 
+      interval: 3m
+      timeout: 10s
+      retries: 3
+
+networks:  # use a network for nginx proxy manager to route traffic internally for reverse proxy traffic
+  default:
+    external: true
+    name: SHARED
