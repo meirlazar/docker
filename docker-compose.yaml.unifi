@@ -1,0 +1,39 @@
+version: "2.1"
+services:
+  unifi:
+    image: lscr.io/linuxserver/unifi-controller:latest
+    container_name: unifi
+    environment:
+      - PUID=1000 # use the UID/GID of the user running the docker-compose command (docker-compose up -d)
+      - PGID=1000
+      - MEM_LIMIT=2056M #optional
+      - MEM_STARTUP=256M #optional
+    volumes:
+      - ./backups:/backups
+      - ./config:/config
+      - ./usr_lib_unifi:/usr/lib/unifi
+    ports:
+      - 3455:3478/udp
+      - 10001:10001/udp
+      - 8080:8080  # http webUI
+      - 8443:8443 # https webUI (optional - if using npm reverse proxy with forcing SSL, you can remove this) 
+      - 1900:1900/udp
+      - 8843:8843
+      - 8880:8880
+      - 6789:6789
+      - 5514:5514/udp
+    mem_limit: 2048M
+    mem_reservation: 128M
+    cpus: 1.0
+    restart: unless-stopped
+    healthcheck:
+      test: curl --connect-timeout 5 --retry 3 --fail -s -o /dev/null http://localhost:8080 || exit 1
+      interval: 3m
+      timeout: 10s
+      retries: 3
+      start_period: 1m
+  
+networks:  # npm internal network
+  default:
+    external: true
+    name: SHARED
