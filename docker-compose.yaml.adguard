@@ -1,0 +1,44 @@
+version: "2.1"
+services:
+  adguardhome:
+    image: adguard/adguardhome:edge
+    container_name: adguard
+    #    cap_add: 
+    #  - NET_ADMIN
+    network_mode: "host" # ports can be removed in host mode
+    # privileged: true
+    ports:
+      - 53:53/udp
+      - 53:53/tcp
+      # DHCP
+      - 67:67/udp
+      - 68:68/tcp
+      - 68:68/udp
+      # HTTPS/DNS-OVER-HTTPS
+      - 853:853/tcp
+      # DNS-OVER-QIC
+      - 784:784/udp
+      - 3000:3000/tcp
+        # - 8181:80
+        # - 8182:443
+    volumes:
+      - ./workdir:/opt/adguardhome/work
+      - ./confdir:/opt/adguardhome/conf
+      - /etc/hosts:/etc/hosts:ro
+      - /etc/localtime:/etc/localtime:ro # uses local TZ info so no need for env variable for TZ.
+      - /etc/timezone:/etc/timezone:ro
+    healthcheck:
+      test: wget --timeout=5 -nv -t1 --spider "http://localhost:3000" || exit 1 # healthcheck using the webui check as confirmation that container is healthy
+      interval: 10m
+      timeout: 10s
+      start_period: 1m
+      retries: 3
+
+    restart: unless-stopped
+    mem_limit: 2048m
+    cpus: 2.0
+# requires that the 'SHARED' network be created prior by running ``` docker network create SHARED ``` so npm can route traffic internally to docker with only the container name being used
+networks:
+  default:
+    external: true
+    name: SHARED
