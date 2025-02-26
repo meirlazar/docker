@@ -1,0 +1,12 @@
+# WebUI app for monitoring/alerting of services, webapps, servers/clients, etc. 
+version: '3.3'
+
+services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:latest
+    init: true
+    container_name: uptime-kuma
+    volumes:
+      - ./uptime-kuma:/app/data
+    ports:
+      - 3001:3001
