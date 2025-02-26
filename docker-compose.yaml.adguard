@@ -37,7 +37,7 @@ services:
     restart: unless-stopped
     mem_limit: 2048m
     cpus: 2.0
-# requires that the 'SHARED' network be created prior by running ``` docker network create SHARED ``` so npm can route traffic internally to docker with only the container name being used
+# requires that the 'SHARED' network be created prior by running  'docker network create SHARED' so npm can route traffic internally to docker with only the container name being used
 networks:
   default:
     external: true
