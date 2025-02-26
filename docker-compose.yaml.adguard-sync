@@ -1,0 +1,65 @@
+services:
+  adguard-sync:
+    image: ghcr.io/bakito/adguardhome-sync:latest
+    container_name: adguard-sync
+    command: run
+    environment:
+      PUID: 1000 # change to the uid of user running docker run commands
+      PGID: 1000 # change to the gid of user's group running docker run commands
+    # CONFIGFILE: /config/adguardhome-sync.yaml #optional
+      LOG_LEVEL: "info"
+      ORIGIN_URL: "http://x.x.x.x:3000" # this is the ip and port of the primary DNS adguard server to be used to synced to the replicas
+      # ORIGIN_WEB_URL: "https://some-other.url" # used in the web interface (default: <origin-url>
+
+      ORIGIN_USERNAME: "primaryAdguardServerUserID" # userid for the primary adguard server
+      ORIGIN_PASSWORD: "ChangeThisToThePasswordForPrimaryAdguardServerLogin"
+      REPLICA1_URL: "http://x.x.x.y:3000" # this is the ip and port of the first DNS adguard server replica to be synced 
+      REPLICA1_USERNAME: "Replica1AdguardServerUserID"  # userid for the first replica adguard server
+      REPLICA1_PASSWORD: "ChangeThisToThePasswordForReplica1AdguardServerLogin"
+      REPLICA1_AUTO_SETUP: true # if true, AdGuardHome is automatically initialized.
+      REPLICA1_INTERFACE_NAME: 'eth0' # use custom dhcp interface name  
+
+      REPLICA2_URL: "http://x.x.x.z:3000" # this is the ip and port of the second DNS adguard server replica to be synced 
+      REPLICA2_USERNAME: "Replica2AdguardServerUserID"  # userid for the second replica adguard server
+      REPLICA2_PASSWORD: "ChangeThisToThePasswordForReplica2AdguardServerLogin"
+      # REPLICA2_API_PATH: "/some/path/control"
+      # REPLICA2_WEB_URL: "https://some-other.url" # used in the web interface (default: <replica-url>
+      REPLICA2_AUTO_SETUP: true # if true, AdGuardHome is automatically initialized.
+      REPLICA2_INTERFACE_NAME: 'eth0' # use custom dhcp interface name
+      REPLICA2_DHCP_SERVER_ENABLED: true # (optional) enables/disables the dhcp server on the replica
+      CRON: "*/10 * * * *" # run every 10 minutes
+      RUN_ON_START: true
+      # CONTINUE_ON_ERROR: false # If enabled, sync task will not fail on single errors, but log errors and continue
+      # Configure the sync API server, disabled if api port is 0
+      API_PORT: 8080
+      API_DARK_MODE: true
+      # API_USERNAME: admin
+      # API_PASSWORD: secret
+
+      # Configure sync features; by default all features are enabled.
+      FEATURES_GENERAL_SETTINGS: true
+      FEATURES_QUERY_LOG_CONFIG: true
+      FEATURES_STATS_CONFIG: true
+      FEATURES_CLIENT_SETTINGS: true
+      FEATURES_SERVICES: true
+      FEATURES_FILTERS: true
+      FEATURES_DHCP_SERVER_CONFIG: true
+      FEATURES_DHCP_STATIC_LEASES: true
+      FEATURES_DNS_SERVER_CONFIG: true
+      FEATURES_DNS_ACCESS_LISTS: true
+      FEATURES_DNS_REWRITES: true
+    volumes:
+      - ./config:/config
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    ports:
+      - 3300:8080
+    restart: unless-stopped
+    mem_limit: 128m
+    cpus: .5
+
+networks:
+  default:
+    external: true
+    name: SHARED
+
